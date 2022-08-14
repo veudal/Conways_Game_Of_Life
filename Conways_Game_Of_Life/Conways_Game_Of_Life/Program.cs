@@ -17,7 +17,7 @@ namespace Conways_Game_Of_Life
         {
             //Maximize the window
             SendKeys.SendWait("% x");
-            Thread.Sleep(300);
+
             try
             {
                 while (true)
@@ -120,7 +120,7 @@ namespace Conways_Game_Of_Life
         private static void StartSimulation(bool[,] map)
         {
             Console.CursorVisible = false;
-            bool[,] previousMap = null;
+            bool[,] previousMap = new bool[dimesions, dimesions];
             bool userQuit = false;
             while (AtLeastOneAlive(map) && AreDifferentMaps(previousMap, map))
             {
@@ -128,29 +128,35 @@ namespace Conways_Game_Of_Life
                 previousMap = map;
                 map = GetNextFrame(map);
                 Thread.Sleep(nextFrameDelay);
-                if (Console.KeyAvailable)
+
+                if(UserCancels())
                 {
-                    if (Console.ReadKey(true).Key == ConsoleKey.Enter)
-                    {
-                        Console.Clear();
-                        Console.WriteLine("You started a new simulation by pressing enter");
-                        Thread.Sleep(2500);
-                        Console.Clear();
-                        userQuit = true;
-                        break;
-                    }
+                    Console.Clear();
+                    Console.WriteLine("You started a new simulation by pressing enter");
+                    Thread.Sleep(2500);
+                    Console.Clear();
+                    userQuit = true;
+                    break;
                 }
             }
-            if(userQuit == false)
-               HandleEnd();
+            if (userQuit == false)
+                HandleEnd();
+        }
+
+        private static bool UserCancels()
+        {
+            if (Console.KeyAvailable)
+            {
+                if (Console.ReadKey(true).Key == ConsoleKey.Enter)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static bool AreDifferentMaps(bool[,] previousMap, bool[,] map)
         {
-            if (previousMap is null)
-            {
-                return true;
-            }
             for (int y = 0; y < dimesions; y++)
             {
                 for (int x = 0; x < dimesions; x++)
@@ -228,8 +234,9 @@ namespace Conways_Game_Of_Life
             {
                 for (int x = 0; x < dimesions; x++)
                 {
+                    int neighbours = CountNeighbours(oldMap, x, y);
+
                     //Applying Conway's game of life rules
-                    int neighbours = LivingNeighbours(oldMap, x, y);
                     if (oldMap[x, y] == false)
                     {
                         if (neighbours == 3)
@@ -243,75 +250,25 @@ namespace Conways_Game_Of_Life
             }
         }
 
-        private static int LivingNeighbours(bool[,] map, int x, int y)
+        private static int CountNeighbours(bool[,] map, int x, int y)
         {
             int neighbours = 0;
-
-            if (NorthValid(y) && map[x, y - 1] == true)
+            for (int i = -1; i < 2; i++)
             {
-                neighbours++;
-            }
-            if (SouthValid(y) && map[x, y + 1] == true)
-            {
-                neighbours++;
-            }
-            if (WestValid(x) && map[x - 1, y] == true)
-            {
-                neighbours++;
-            }
-            if (EastValid(x) && map[x + 1, y] == true)
-            {
-                neighbours++;
-            }
-            if (NorthValid(y) && WestValid(x) && map[x - 1, y - 1] == true)
-            {
-                neighbours++;
-            }
-            if (NorthValid(y) && EastValid(x) && map[x + 1, y - 1] == true)
-            {
-                neighbours++;
-            }
-            if (SouthValid(y) && WestValid(x) && map[x - 1, y + 1] == true)
-            {
-                neighbours++;
-            }
-            if (SouthValid(y) && EastValid(x) && map[x + 1, y + 1] == true)
-            {
-                neighbours++;
+                for (int j = -1; j < 2; j++)
+                {
+                    if (i != 0 || j != 0)
+                    {
+                        int col = (x + i + dimesions) % dimesions;
+                        int row = (y + j + dimesions) % dimesions;
+                        if (map[col, row])
+                        {
+                            neighbours++;
+                        }
+                    }
+                }
             }
             return neighbours;
-        }
-
-        private static bool NorthValid(int y)
-        {
-            if (y > 0)
-                return true;
-            else
-                return false;
-        }
-
-        private static bool SouthValid(int y)
-        {
-            if (y < dimesions - 1)
-                return true;
-            else
-                return false;
-        }
-
-        private static bool WestValid(int x)
-        {
-            if (x > 0)
-                return true;
-            else
-                return false;
-        }
-
-        private static bool EastValid(int x)
-        {
-            if (x < dimesions - 1)
-                return true;
-            else
-                return false;
         }
 
         private static void PrintCurrentState(bool[,] map)
@@ -338,9 +295,9 @@ namespace Conways_Game_Of_Life
 
         private static bool AtLeastOneAlive(bool[,] map)
         {
-            foreach (var cell in map)
+            foreach (bool cell in map)
             {
-                if (cell == true)
+                if (cell)
                 {
                     return true;
                 }
