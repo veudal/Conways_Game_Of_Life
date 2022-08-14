@@ -7,6 +7,7 @@ The Game Of Life in console
 - Set next frame delay
 - Select and revive cells before starting simulation
 - Auto restarts
+- Goes to the other side when reaching an edge
 
 # Getting started
 
